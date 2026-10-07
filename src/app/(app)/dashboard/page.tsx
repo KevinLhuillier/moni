@@ -1,5 +1,5 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
-import { io } from "next/cache"
 import Link from "next/link"
 import { ArrowRightIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 
@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   getBudgets,
   getCategories,
@@ -35,15 +36,37 @@ import {
   shiftMonth,
   today,
 } from "@/lib/month"
+import { getMonth } from "@/lib/month-param"
 import type { TransactionWithCategory } from "@/lib/supabase/database.types"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Tableau de bord" }
 
-export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
-  const params = await searchParams
-  await io() // parseMonth lit la date du jour
-  const month = parseMonth(params.month)
+type SearchParams = PageProps<"/dashboard">["searchParams"]
+
+// Le titre fait partie du shell statique ; ce qui dépend du mois est rendu à la
+// requête derrière un <Suspense> (voir getMonth).
+export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
+  return (
+    <>
+      <PageHeader title="Tableau de bord" description="Vue d'ensemble de vos finances.">
+        <Suspense fallback={<Skeleton className="h-8 w-56" />}>
+          <DashboardMonthNav searchParams={searchParams} />
+        </Suspense>
+      </PageHeader>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardContent searchParams={searchParams} />
+      </Suspense>
+    </>
+  )
+}
+
+async function DashboardMonthNav({ searchParams }: { searchParams: SearchParams }) {
+  return <MonthNav month={await getMonth(searchParams)} basePath="/dashboard" />
+}
+
+async function DashboardContent({ searchParams }: { searchParams: SearchParams }) {
+  const month = await getMonth(searchParams)
   const previousMonth = shiftMonth(month, -1)
   const [transactions, previousTransactions, categories, budgets] = await Promise.all([
     getMonthTransactions(month),
@@ -79,10 +102,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <>
-      <PageHeader title="Tableau de bord" description="Vue d'ensemble de vos finances.">
-        <MonthNav month={month} basePath="/dashboard" />
-      </PageHeader>
-
       <div className="grid gap-4">
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard label="Revenus" value={totals.income} valueClassName="text-income" />
@@ -227,6 +246,19 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         </div>
       </div>
     </>
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="grid gap-4" aria-busy="true" aria-label="Chargement">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Skeleton className="h-24 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+      </div>
+      <Skeleton className="h-80 rounded-xl" />
+    </div>
   )
 }
 

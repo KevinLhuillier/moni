@@ -1,5 +1,5 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
-import { io } from "next/cache"
 import Link from "next/link"
 import { TagsIcon } from "lucide-react"
 
@@ -18,17 +18,40 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getBudgets, getCategories, getMonthTransactions, sumByCategory } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
-import { parseMonth } from "@/lib/month"
+import { getMonth } from "@/lib/month-param"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Budgets" }
 
-export default async function BudgetsPage({ searchParams }: PageProps<"/budgets">) {
-  const params = await searchParams
-  await io() // parseMonth lit la date du jour
-  const month = parseMonth(params.month)
+type SearchParams = PageProps<"/budgets">["searchParams"]
+
+// Le titre fait partie du shell statique ; ce qui dépend du mois (searchParams et
+// date du jour) est rendu à la requête derrière un <Suspense>, pour que la
+// navigation, y compris d'un mois à l'autre, reste instantanée.
+export default function BudgetsPage({ searchParams }: PageProps<"/budgets">) {
+  return (
+    <>
+      <PageHeader title="Budgets" description="Vos plafonds de dépenses mensuels par catégorie.">
+        <Suspense fallback={<Skeleton className="h-8 w-56" />}>
+          <BudgetsMonthNav searchParams={searchParams} />
+        </Suspense>
+      </PageHeader>
+      <Suspense fallback={<BudgetsSkeleton />}>
+        <BudgetsContent searchParams={searchParams} />
+      </Suspense>
+    </>
+  )
+}
+
+async function BudgetsMonthNav({ searchParams }: { searchParams: SearchParams }) {
+  return <MonthNav month={await getMonth(searchParams)} basePath="/budgets" />
+}
+
+async function BudgetsContent({ searchParams }: { searchParams: SearchParams }) {
+  const month = await getMonth(searchParams)
   const [categories, budgets, transactions] = await Promise.all([
     getCategories(),
     getBudgets(),
@@ -55,10 +78,6 @@ export default async function BudgetsPage({ searchParams }: PageProps<"/budgets"
 
   return (
     <>
-      <PageHeader title="Budgets" description="Vos plafonds de dépenses mensuels par catégorie.">
-        <MonthNav month={month} basePath="/budgets" />
-      </PageHeader>
-
       {expenseCategories.length === 0 ? (
         <Card>
           <Empty className="py-16">
@@ -171,5 +190,17 @@ export default async function BudgetsPage({ searchParams }: PageProps<"/budgets"
         </div>
       )}
     </>
+  )
+}
+
+function BudgetsSkeleton() {
+  return (
+    <div className="grid gap-6" aria-busy="true" aria-label="Chargement">
+      <Skeleton className="h-32 rounded-xl" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-xl" />
+      </div>
+    </div>
   )
 }

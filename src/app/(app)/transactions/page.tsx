@@ -1,5 +1,5 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
-import { io } from "next/cache"
 import Link from "next/link"
 import { ArrowLeftRightIcon } from "lucide-react"
 
@@ -8,10 +8,12 @@ import { PageHeader } from "@/components/page-header"
 import { TransactionList } from "@/components/transactions/transaction-list"
 import { Card, CardContent } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCategories, getMonthTransactions, sumByType } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
-import { monthKey, parseMonth } from "@/lib/month"
+import { monthKey } from "@/lib/month"
+import { getMonth } from "@/lib/month-param"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Transactions" }
@@ -22,11 +24,43 @@ const FILTERS = [
   { value: "income", label: "Revenus" },
 ] as const
 
-export default async function TransactionsPage({ searchParams }: PageProps<"/transactions">) {
-  const params = await searchParams
-  await io() // parseMonth lit la date du jour
-  const month = parseMonth(params.month)
-  const filter = FILTERS.find((f) => f.value === params.type)?.value ?? "all"
+type SearchParams = PageProps<"/transactions">["searchParams"]
+
+const parseFilter = (value: string | string[] | undefined) =>
+  FILTERS.find((f) => f.value === value)?.value ?? "all"
+
+// Le titre fait partie du shell statique ; ce qui dépend du mois est rendu à la
+// requête derrière un <Suspense> (voir getMonth).
+export default function TransactionsPage({ searchParams }: PageProps<"/transactions">) {
+  return (
+    <>
+      <PageHeader title="Transactions" description="Toutes vos opérations du mois.">
+        <Suspense fallback={<Skeleton className="h-8 w-56" />}>
+          <TransactionsMonthNav searchParams={searchParams} />
+        </Suspense>
+      </PageHeader>
+      <Suspense fallback={<TransactionsSkeleton />}>
+        <TransactionsContent searchParams={searchParams} />
+      </Suspense>
+    </>
+  )
+}
+
+async function TransactionsMonthNav({ searchParams }: { searchParams: SearchParams }) {
+  const [params, month] = await Promise.all([searchParams, getMonth(searchParams)])
+  const filter = parseFilter(params.type)
+  return (
+    <MonthNav
+      month={month}
+      basePath="/transactions"
+      params={{ type: filter === "all" ? undefined : filter }}
+    />
+  )
+}
+
+async function TransactionsContent({ searchParams }: { searchParams: SearchParams }) {
+  const [params, month] = await Promise.all([searchParams, getMonth(searchParams)])
+  const filter = parseFilter(params.type)
 
   const [transactions, categories] = await Promise.all([
     getMonthTransactions(month),
@@ -46,14 +80,6 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
 
   return (
     <>
-      <PageHeader title="Transactions" description="Toutes vos opérations du mois.">
-        <MonthNav
-          month={month}
-          basePath="/transactions"
-          params={{ type: filter === "all" ? undefined : filter }}
-        />
-      </PageHeader>
-
       <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
         <Stat label="Revenus" value={totals.income} className="text-income" />
         <Stat label="Dépenses" value={totals.expense} />
@@ -97,6 +123,19 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
         </CardContent>
       </Card>
     </>
+  )
+}
+
+function TransactionsSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Chargement">
+      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
+        <Skeleton className="h-16 rounded-xl sm:h-20" />
+        <Skeleton className="h-16 rounded-xl sm:h-20" />
+        <Skeleton className="h-16 rounded-xl sm:h-20" />
+      </div>
+      <Skeleton className="h-96 rounded-xl" />
+    </div>
   )
 }
 
