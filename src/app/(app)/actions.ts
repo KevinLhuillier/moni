@@ -53,6 +53,7 @@ const transactionSchema = z.object({
     .max(200, "Description trop longue (200 caractères max).")
     .optional()
     .transform((v) => v || null),
+  recurring: z.boolean(),
 })
 
 export async function saveTransaction(formData: FormData): Promise<ActionResult> {
@@ -64,7 +65,10 @@ export async function saveTransaction(formData: FormData): Promise<ActionResult>
       date: formData.get("date"),
       category_id: formData.get("category_id") ?? undefined,
       description: formData.get("description") ?? undefined,
+      recurring: formData.get("recurring") === "on",
     })
+    // Seules les dépenses peuvent être récurrentes (recopiées au mois suivant).
+    values.recurring &&= values.type === "expense"
     const { supabase } = await requireUser()
     const { error } = id
       ? await supabase.from("transactions").update(values).eq("id", id)

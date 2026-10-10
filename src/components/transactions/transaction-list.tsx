@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react"
+import { MoreHorizontalIcon, PencilIcon, RepeatIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import { deleteTransaction } from "@/app/(app)/actions"
@@ -69,8 +69,16 @@ export function TransactionList({ transactions, categories, groupByDate = false 
                 <li key={t.id} className="flex items-center gap-3 px-4 py-3">
                   <CategoryIcon category={t.category} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {t.description || t.category?.name || "Sans catégorie"}
+                    <p className="flex items-center gap-1.5 text-sm font-medium">
+                      <span className="truncate">
+                        {t.description || t.category?.name || "Sans catégorie"}
+                      </span>
+                      {t.recurring && (
+                        <RepeatIcon
+                          className="size-3.5 shrink-0 text-muted-foreground"
+                          aria-label="Récurrente"
+                        />
+                      )}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {t.description ? (t.category?.name ?? "Sans catégorie") : null}

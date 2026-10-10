@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { saveTransaction } from "@/app/(app)/actions"
 import { CategoryDot } from "@/components/category-badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -187,6 +188,23 @@ function TransactionForm({
           defaultValue={transaction?.description ?? ""}
         />
       </div>
+
+      {type === "expense" && (
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="recurring"
+            name="recurring"
+            defaultChecked={transaction?.recurring ?? false}
+            className="mt-0.5"
+          />
+          <div className="grid gap-1">
+            <Label htmlFor="recurring">Dépense récurrente</Label>
+            <p className="text-xs text-muted-foreground">
+              Ajoutée automatiquement au mois suivant, le dernier jour du mois.
+            </p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="text-sm text-destructive">

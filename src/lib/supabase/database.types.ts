@@ -37,6 +37,8 @@ export type Database = {
           amount: number
           date: string
           description: string | null
+          recurring: boolean
+          recurring_source_id: string | null
           created_at: string
         }
         Insert: {
@@ -47,6 +49,8 @@ export type Database = {
           amount: number
           date?: string
           description?: string | null
+          recurring?: boolean
+          recurring_source_id?: string | null
           created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["transactions"]["Insert"]>
