@@ -22,6 +22,7 @@ const FILTERS = [
   { value: "all", label: "Tout" },
   { value: "expense", label: "Dépenses" },
   { value: "income", label: "Revenus" },
+  { value: "saving", label: "Épargne" },
 ] as const
 
 type SearchParams = PageProps<"/transactions">["searchParams"]
@@ -80,11 +81,12 @@ async function TransactionsContent({ searchParams }: { searchParams: SearchParam
 
   return (
     <>
-      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
         <Stat label="Revenus" value={totals.income} className="text-income" />
         <Stat label="Dépenses" value={totals.expense} />
+        <Stat label="Épargne" value={totals.saving} className="text-saving" />
         <Stat
-          label="Solde"
+          label="Reste disponible"
           value={totals.balance}
           className={totals.balance < 0 ? "text-expense" : undefined}
         />
@@ -129,7 +131,8 @@ async function TransactionsContent({ searchParams }: { searchParams: SearchParam
 function TransactionsSkeleton() {
   return (
     <div aria-busy="true" aria-label="Chargement">
-      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+        <Skeleton className="h-16 rounded-xl sm:h-20" />
         <Skeleton className="h-16 rounded-xl sm:h-20" />
         <Skeleton className="h-16 rounded-xl sm:h-20" />
         <Skeleton className="h-16 rounded-xl sm:h-20" />

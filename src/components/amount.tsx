@@ -15,7 +15,7 @@ export function Amount({
     <span
       className={cn(
         "font-medium whitespace-nowrap tabular-nums",
-        type === "income" ? "text-income" : "text-foreground",
+        type === "income" ? "text-income" : type === "saving" ? "text-saving" : "text-foreground",
         className
       )}
     >

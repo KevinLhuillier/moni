@@ -125,6 +125,7 @@ function TransactionForm({
         <TabsList className="w-full">
           <TabsTrigger value="expense">Dépense</TabsTrigger>
           <TabsTrigger value="income">Revenu</TabsTrigger>
+          <TabsTrigger value="saving">Épargne</TabsTrigger>
         </TabsList>
       </Tabs>
 

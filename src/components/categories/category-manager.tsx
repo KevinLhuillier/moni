@@ -30,6 +30,7 @@ import type { Category, TransactionType } from "@/lib/supabase/database.types"
 const SECTIONS: { type: TransactionType; title: string }[] = [
   { type: "expense", title: "Dépenses" },
   { type: "income", title: "Revenus" },
+  { type: "saving", title: "Épargne" },
 ]
 
 export function CategoryManager({ categories }: { categories: Category[] }) {
@@ -49,7 +50,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {SECTIONS.map((section) => {
           const items = categories.filter((c) => c.type === section.type)
           return (

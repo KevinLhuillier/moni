@@ -19,7 +19,7 @@ const amountSchema = z.coerce
   )
   .transform((v) => Math.round(v * 100) / 100)
 
-const typeSchema = z.enum(["expense", "income"])
+const typeSchema = z.enum(["expense", "income", "saving"])
 const idSchema = z.uuid()
 
 function fail(error: unknown): ActionResult {

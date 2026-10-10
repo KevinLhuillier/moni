@@ -1,7 +1,7 @@
 // Types alignés sur supabase/migrations. Régénérables avec :
 // npx supabase gen types typescript --project-id <id> > src/lib/supabase/database.types.ts
 
-export type TransactionType = "expense" | "income"
+export type TransactionType = "expense" | "income" | "saving"
 
 export type Database = {
   public: {

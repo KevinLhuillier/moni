@@ -51,12 +51,16 @@ export function sumByCategory(transactions: TransactionWithCategory[]) {
   return totals
 }
 
+/**
+ * Totaux par type. L'épargne n'est pas une dépense mais réduit le reste
+ * disponible ; le taux d'épargne est rapporté aux revenus (null sans revenus).
+ */
 export function sumByType(transactions: TransactionWithCategory[]) {
-  let income = 0
-  let expense = 0
-  for (const t of transactions) {
-    if (t.type === "income") income += Number(t.amount)
-    else expense += Number(t.amount)
+  const totals = { income: 0, expense: 0, saving: 0 }
+  for (const t of transactions) totals[t.type] += Number(t.amount)
+  return {
+    ...totals,
+    balance: totals.income - totals.expense - totals.saving,
+    savingRate: totals.income > 0 ? totals.saving / totals.income : null,
   }
-  return { income, expense, balance: income - expense }
 }

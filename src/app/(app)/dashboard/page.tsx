@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowRightIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
+import { ArrowRightIcon, PiggyBankIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 
 import { BudgetBar } from "@/components/budgets/budget-bar"
 import { CategoryIcon } from "@/components/category-badge"
@@ -103,7 +103,7 @@ async function DashboardContent({ searchParams }: { searchParams: SearchParams }
   return (
     <>
       <div className="grid gap-4">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Revenus" value={totals.income} valueClassName="text-income" />
           <StatCard label="Dépenses" value={totals.expense}>
             {expenseDelta !== null && (
@@ -118,8 +118,16 @@ async function DashboardContent({ searchParams }: { searchParams: SearchParams }
               </p>
             )}
           </StatCard>
+          <StatCard label="Épargne" value={totals.saving} valueClassName="text-saving">
+            {totals.savingRate !== null && (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <PiggyBankIcon className="size-3.5 text-saving" />
+                {Math.round(totals.savingRate * 100)} % des revenus
+              </p>
+            )}
+          </StatCard>
           <StatCard
-            label="Solde"
+            label="Reste disponible"
             value={totals.balance}
             valueClassName={totals.balance < 0 ? "text-expense" : undefined}
           />
@@ -252,7 +260,8 @@ async function DashboardContent({ searchParams }: { searchParams: SearchParams }
 function DashboardSkeleton() {
   return (
     <div className="grid gap-4" aria-busy="true" aria-label="Chargement">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Skeleton className="h-24 rounded-xl" />
         <Skeleton className="h-24 rounded-xl" />
         <Skeleton className="h-24 rounded-xl" />
         <Skeleton className="h-24 rounded-xl" />
